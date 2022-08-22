@@ -93,8 +93,10 @@ class VL53L0X:
             extension = '.dylib'
         else:
             extension = '.so'
-        filename = 'libvl53l0x' + extension
+        #filename = 'libvl53l0x' + extension
+        filename = "vl53l0x_python" + extension
         # look for `libvl53l0x.<ext>`
+        self.libc = None
         for path in searchpath:
             relpath = os.path.join(os.path.dirname(__file__), path, filename)
             if os.path.exists(relpath):
@@ -104,7 +106,16 @@ class VL53L0X:
         # this should search whatever paths dlopen is supposed to
         # search.
         if self.libc is None:
-            self.libc = CDLL(os.path.join(os.path.dirname(__file__), filename))
+            from pathlib import Path
+            raw_fp = str(Path(__file__).resolve().parents[4] / "share" / "vl53l0x_driver" / "bin" / filename)
+            #raw_fp = os.path.join(os.path.dirname(__file__),
+             #   '../../../../share/vl53l0x_driver/bin', filename)
+            if os.path.exists(raw_fp):
+                self.libc = CDLL(raw_fp)
+        if self.libc is None:
+            raw_fp = os.path.join(os.path.dirname(__file__), filename)
+            if os.path.exists(raw_fp):
+                self.libc = CDLL(raw_fp)
         # throw error if the library was not found
         if self.libc is None:
             raise RuntimeError('could not find DLL named ' + filename)
